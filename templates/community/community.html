@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+<!-- 템플릿 필터 적용을 위해 추가 -->
+{% load community_filter %}
+{% load static %}
+{%block title%} - 커뮤니티{%endblock%}
+{% block content %}
+<div class="container px-4 py-5">
+    <!-- 공지사항 영역 -->
+    <div id="announcement">
+        <h2 class="pb-2 border-bottom">커뮤니티</h2>
+        <p></p>
+    </div><hr>
+    <!-- 그리드로 배치 -->
+    <div class="row">
+        <!-- 성길씨 Q&A에서 가져옴. 그리드: 왼쪽 2/12(16.67%) 영역 -->
+        <aside class="col-lg-2">
+            <div class="flex-shrink-0">
+                <ul class="list-unstyled ps-0">
+                    <li class="mb-1">
+                        <button class="btn btn-toggle rounded mb-1" data-bs-toggle="collapse"
+                                data-bs-target="#home-collapse" aria-expanded="true">
+                            <!-- 카테고리 눌렀다면 사이드바 큰 글씨로 -->
+                            {% if current_category.slug %}
+                            <h3>{{ current_category.slug }}</h3>
+                            {% else %}
+                            <!-- 카테고리를 누르지 않았다면 -->
+                            <h3>전체글</h3>
+                            {% endif %}
+                        </button>
+                        <div class="collapse show" id="home-collapse">
+                            <ul id="list-bar" class="btn-toggle-nav list-unstyled pb-1 small">
+                                <!-- 전체글 -->
+                                <!-- 뷰를 통해 넘어온 카테고리 정보가 없으면 전체글이 선택됨 -->
+                                <li><a href="{% url 'community:community' %}" class="link-dark rounded
+                                {% if not current_category %} selected{% endif %}">전체글</a></li>
+                                <!-- 카테고리 이름으로 리스트 설정 -->
+                                <!-- 뷰를 통해 넘어온 카테고리 정보가 있으면 그 카테고리가 선택됨 -->
+                                {% for category in categories %}
+                                <li><a href="{{ category.get_absolute_url }}" class="link-dark rounded
+                                {% if current_category == category %} selected{% endif %}">
+                                    {{ category.name }}
+                                </a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+        <!-- 그리드: 가운데 8/12(66.67%) 영역 -->
+        <section id="community" class="col-lg-8">
+            <table id="commu-table" class="table table-hover">
+                <thead>
+                    <tr>
+                        <!-- 좌우 패딩 0 -->
+                        <td class="px-0">번호</td>
+                        <!-- 카테고리 추가 -->
+                        <td> 분류 </td>
+                        <td>제목</td>
+                        <td>작성자</td>
+                        <td>작성일</td>
+                        <!-- 왼쪽 패딩 0 -->
+                        <td class="ps-0">조회</td>
+                        <td class="px-0">추천</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- post가 있으면 -->
+                    {% if post_list %}
+                        <!-- 각 post별로 모두 -->
+                        {% for post in post_list %}
+                        <tr>
+                            <!-- 번호 -->
+                            <!-- 템플릿 태그 -->
+                            <td>
+                                {{ post_list.paginator.count|sub:post_list.start_index|sub:forloop.counter0|add:1 }}
+                            </td>
+                            <!-- 카테고리 -->
+                            <td class="px-0" style="font-size: 0.9rem;">
+                                [{{ post.category }}]
+                            </td>
+                            <!-- 제목: a태그로 연결 -->
+                            <td class="text-start">
+                                <a class="label-title" href="{% url 'community:detail' post.id %}">
+                                    {{ post.title }}
+                                    <!-- 댓글이 있으면 숫자로 표시 -->
+                                    {% if post.reply_set.count > 0 %}
+                                    <span class="badge bg-commu">{{ post.reply_set.count }}</span>
+                                    {% endif %}
+                                </a>
+                            </td>
+                            <!-- 작성자 -->
+                            <td>{{ post.writer }}</td>
+                            <!-- 작성일 -->
+                            <!-- 오늘 작성된 글은 [오전/오후 hh:mm]으로 포맷변경 -->
+                            {% if post.create_date|date:"Y-m-d" == today|date:"Y-m-d" %}
+                            <td>{{ post.create_date|date:"A h:i" }}</td>
+                            <!-- 오늘 글이 아니면 [yyyy.mm.dd]으로 포맷변경 -->
+                            {% else %}
+                            <td>{{ post.create_date|date:"Y.m.d" }}</td>
+                            {% endif %}
+                            <!-- 조회수 -->
+                            <td>{{ post.views }}</td>
+                            <!-- 추천수 -->
+                            <td>{{ post.count_liked_user }}</td>
+                        </tr>
+                        {% endfor %}
+                    <!-- post가 없으면 -->
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">게시글이 없습니다.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            <!-- 페이지 처리 영역 -->
+            <ul class="pagination justify-content-center">
+                <!-- 이전 페이지가 존재하면 아이콘 표시 -->
+                {% if post_list.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ post_list.previous_page_number }}">
+                        <i class="fa-solid fa-backward"></i>
+                    </a>
+                </li>
+                {% endif %}
+                <!-- 페이지 처리된 리스트 범위를 모두 표시 -->
+                {% for page_number in post_list.paginator.page_range %}
+                    <!-- 현재 페이지인 경우 class에 active를 주어 표시 -->
+                    <li class="page-item{% if page_number == post_list.number %} active{% endif %}">
+                        <a class="page-link" href="?page={{ page_number }}">
+                            {{ page_number }}
+                        </a>
+                    </li>
+                {% endfor %}
+                <!-- 다음 페이지가 존재하면 아이콘 표시 -->
+                {% if post_list.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ post_list.next_page_number }}">
+                        <i class="fa-solid fa-forward"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            <!-- 검색과 글쓰기 영역 -->
+            <!-- 배치를 위해 그리드 적용 -->
+            <div id="footer" class="row mt-3">
+                <span class="col-4"></span>
+                <span class="col-4 text-center">
+                    <!-- 검색 영역 -->
+                    <!-- 배치를 위해 그리드 적용 -->
+                    <form action="" method="get" class="row">
+                        {% csrf_token %}
+                        <!-- 글씨 영역 -->
+                        <!-- name=kw 지우면 안됨!!! value는 검색 후에 검색어 남아있는 기능 -->
+                        <input type="text" name="kw" value="{{ kw }}" class="col-10">
+                        <!-- 버튼 영역 -->
+                        <button type="submit" class="btn btn-primary col-2">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </form>
+                </span>
+                <span class="col-4 text-end">
+                <!-- 로그인시에만 글쓰기 버튼 보이게 -->
+                {% if user.is_authenticated %}
+                    {% if cate_url %}
+                    <a href="{{ cate_url }}" class="btn-a btn btn-primary">글쓰기</a>
+                    {% else %}
+                    <a href="{% url 'community:post_create' %}" class="btn-a btn btn-primary">글쓰기</a>
+                    {% endif %}
+                {% endif %}
+                </span>
+            </div>
+        </section>
+        <!-- 그리드: 오른쪽 2/12(16.67%) 영역 - 여백으로 남음 -->
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    // 반응형 사이드바
+    function sidebarEffect() {
+        if ($(window).innerWidth() >= 992) {
+            $('.btn-toggle').css('display', 'inline-flex');
+            $('#list-bar').removeClass('d-flex');
+            $('#list-bar').removeClass('justify-content-center');
+        } else {
+            $('.btn-toggle').css('display', 'none');
+            $('#list-bar').addClass('d-flex');
+            $('#list-bar').addClass('justify-content-center');
+        }
+    }
+    // 초기 로딩 시 실행
+    sidebarEffect();
+    // 윈도우 크기 변경 시 실행
+    $(window).resize(sidebarEffect);
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container px-4 py-5">
+    <div id="announcement">
+        <h2 class="pb-2 border-bottom"></h2>
+        <p></p>
+    </div>
+    <div class="row">
+        <!-- 성길씨 Q&A에서 가져옴. 그리드: 왼쪽 2/12(16.67%) 영역 -->
+        <aside class="col-lg-2">
+            <div class="flex-shrink-0">
+                <ul class="list-unstyled ps-0">
+                    <li class="mb-1">
+                        <button class="btn btn-toggle rounded mb-1" data-bs-toggle="collapse"
+                                data-bs-target="#home-collapse" aria-expanded="true">
+                            <!-- 카테고리 눌렀다면 사이드바 큰 글씨로 -->
+                            {% if current_category.slug %}
+                            <h3>{{ current_category.slug }}</h3>
+                            {% else %}
+                            <!-- 카테고리를 누르지 않았다면 -->
+                            <h3>전체글</h3>
+                            {% endif %}
+                        </button>
+                        <div class="collapse show" id="home-collapse">
+                            <ul id="list-bar" class="btn-toggle-nav list-unstyled pb-1 small">
+                                <!-- 전체글 -->
+                                <!-- 뷰를 통해 넘어온 카테고리 정보가 없으면 전체글이 선택됨 -->
+                                <li><a href="{% url 'community:community' %}" class="link-dark rounded
+                                {% if not current_category %} selected{% endif %}">전체글</a></li>
+                                <!-- 카테고리 이름으로 리스트 설정 -->
+                                <!-- 뷰를 통해 넘어온 카테고리 정보가 있으면 그 카테고리가 선택됨 -->
+                                {% for category in categories %}
+                                <li><a href="{{ category.get_absolute_url }}" class="link-dark rounded
+                                {% if current_category == category %} selected{% endif %}">
+                                    {{ category.name }}
+                                </a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+        <!-- 그리드: 가운데 8/12(66.67%) 영역 -->
+        <section id="post_form" class="col-lg-8">
+            <form action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <!-- 유효성 검사 -->
+                {% include 'form_errors.html' %}
+                <!-- 편집기 크기와 맞추려고 스타일 줌 -->
+                <table class="table">
+                    <tr>
+                        <!-- 카테고리 영역 -->
+                        <td style="width: 20%;">
+                            <!-- 셀렉트 옵션으로 카테고리 선택 -->
+                            <select class="form-select" name="category" id="category">
+                                {% for category in categories %}
+                                <!-- 뷰에서 넘어온 카테 정보가 있으면 일치하는 카테고리를 자동선택 -->
+                                <option value="{{ category.id }}" {% if category == current_category %} selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    <!-- 제목 영역 -->
+                        <td style="width: 80%">
+                            <!-- 폼정보가있으면(수정시)title값, 없거나기본값은'' -->
+                            <input type="text" class="form-control" name="title" id="title"
+                                   value="{{ form.title.value|default_if_none:'' }}" placeholder="제목을 입력해주세요">
+                        </td>
+                    </tr>
+                    <!-- ck편집기 영역(내용, 첨부) -->
+                    <tr>
+                        <td colspan="2">
+                            {{ form.media }}
+                            {{ form.description }}
+                        </td>
+                    </tr>
+                </table>
+                <!-- 버튼 영역 -->
+                <!-- 마진탑 -->
+                <div id="btn" class="text-center mt-3">
+                    <button type="reset" class="btn btn-primary">취소</button>
+                    <a href="{% url 'community:community' %}" class="btn-a btn btn-primary">목록</a>
+                    <button type="submit" class="btn btn-primary">작성</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    // 반응형 사이드바
+    function sidebarEffect() {
+        if ($(window).innerWidth() >= 992) {
+            $('.btn-toggle').css('display', 'inline-flex');
+            $('#list-bar').removeClass('d-flex');
+            $('#list-bar').removeClass('justify-content-center');
+        } else {
+            $('.btn-toggle').css('display', 'none');
+            $('#list-bar').addClass('d-flex');
+            $('#list-bar').addClass('justify-content-center');
+        }
+    }
+    // 초기 로딩 시 실행
+    sidebarEffect();
+    // 윈도우 크기 변경 시 실행
+    $(window).resize(sidebarEffect);
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+<!-- 템플릿 필터 적용을 위해 추가 -->
+{% load static %}
+{%block title%} - Q&A{%endblock%}
+{% block content %}
+<div class="container px-4 py-5">
+    <div id="announcement">
+        <div class="pb-2 border-bottom">
+            <h2>고객센터<br>
+                <p style="font-size:1.3rem">Q&A</p></h2>
+            <strong><p style="font-size:0.75rem; color:#ac2c38b5">
+                * 단순비방, 비인격적인 용어 기재시 임의삭제 될 수 있습니다.<br>
+                * 주말, 공휴일, 평일 근무시간(08:30~17:30) 이후 문의에 대해서는 답변이 지연될 수 있습니다.<br></p></strong>
+
+            <hr>
+        </div>
+    </div>
+    <div class="row">
+        {% include 'custom/custom_qnamenu.html' %}
+        <section id="help_answer" class="col-lg-8">
+            <form method="POST" action="" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% include 'form_errors.html' %}
+                <div class="card mb-3" style="background-color: #EBEBE8; border: 1px solid #ddd;">
+                    <div class="card-body p-4">
+                        <div class="card-text"></div>
+                        <h5 class="card-title" style="font-weight:bold; margin-top: -0.5em;">Q : {{ help.title }}</h5>
+                        <hr>
+                        <div class="card-text p-2"
+                             style="border: 1px solid #ddd; background-color: #ffffff; margin-top: 1.5em; margin-bottom: 1.5em; ">
+                            {% if help.content %}
+                            {{ help.content }}
+                            {% else %}
+                            <em>글 내용이 없습니다.</em>
+                            {% endif %}
+                        </div>
+                        <div class="info text-end mt-3" style="font-size:0.9rem;">
+                            <span class="d-block">글쓴이 : {{ help.author }}</span>
+                            <span class="d-block">작성일 : {{ help.pub_date }}</span>
+                            <span class="d-block">이메일 : {{ help.email }}</span>
+                        </div>
+
+                    </div>
+                    <hr>
+
+                    <div class="form-group mb-3 p-4" >
+                        <P>답변을 적어주세요.</P>
+                        <div class="cont">
+                            <textarea class="form-control" name="answer_content" id="answer_content" rows="10"
+                                      placeholder="내용을 입력해주세요">{{ form.answer_content.value|default_if_none:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div id="btn" class="text-center mt-2">
+                        <button type="reset" class="btn btn-primary">취소</button>
+                        <a href="{% url 'custom:help_list' %}" class="btn-a btn btn-primary">목록</a>
+                        <button type="submit" name="post_submit" class="btn btn-primary">답변 작성</button>
+                    </div>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

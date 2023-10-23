@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} - 공지사항{% endblock %}
+
+{% block content %}
+
+<div class="container px-4 py-5">
+    <div id="announcement">
+        <div class="pb-2 border-bottom">
+            <h2>고객센터<br>
+                <p style="font-size:1.3rem">공지사항</p></h2>
+            <strong><p style="font-size:0.75rem; color:#ac2c38b5">
+                그린 24의 소식을 빠르게 전달해드리겠습니다.</p></strong>
+            <hr>
+        </div>
+    </div>
+    <div class="row">
+        {% include 'custom/custom_noticemenu.html' %}
+        <section id="notice_list" class="col-lg-8">
+            <h4>공지사항입니다.</h4>
+            <h6>제목을 검색해주세요.</h6>
+            <form method="GET" action="{% url 'custom:notice_list' %}" class="mb-3">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="query" placeholder="검색어 입력" value="{{ query }}">
+                    <button type="submit" class="btn btn-primary">검색</button>
+                </div>
+            </form>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th scope="col" style="font-size: 0.9rem;">No</th>
+                    <th scope="col" style="font-size: 0.9rem;">제목</th>
+                    <th scope="col" style="font-size: 0.9rem;">작성자</th>
+                    <th scope="col" style="font-size: 0.9rem;">작성일</th>
+                    {% if request.user.is_superuser %} <!-- 추가: superuser인 경우에만 삭제 열을 표시 -->
+                    <th scope="col" style="font-size: 0.9rem;">삭제</th>
+                    {% endif %}
+                </tr>
+                </thead>
+                <tbody>
+                {% if notice_page %}
+                <!-- 공지사항 가져옴 -->
+                    {% for notice in notice_page %}
+                    <tr>
+                        <td>{{ notice_page.start_index|add:forloop.counter0 }}</td>
+                        <td class="title">
+                            <a href="{% url 'custom:notice_view' notice.id %}">{{ notice.title }}</a>
+                        </td>
+                        <td>{{ notice.author }}</td>
+                        <td>{{ notice.pub_date }}</td>
+                        {% if request.user.is_superuser %} <!-- 추가: superuser인 경우에만 삭제 버튼 표시 -->
+                        <td class="delete">
+                            <a href="{% url 'custom:notice_delete' notice.id %}">
+                                <img id="delete-icon1" src="{% static 'greenbooks/images/delete.png' %}" alt="휴지통">
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <!-- 리스트가 없으면 -->
+                <tr>
+                    <td colspan="6" class="text-center">게시글이 없습니다.</td>
+                </tr>
+                {% endif %}
+                </tbody>
+            </table>
+            <div class="pagination">
+                <!-- 이전 페이지 버튼 -->
+                {% if notice_page.has_previous %}
+                    <a href="?page=1{% if query %}&query={{ query }}{% endif %}" class="pagination-btn">&laquo;</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&query={{ query }}{% endif %}" class="pagination-btn">&lsaquo;</a>
+                {% else %}
+                    <span class="pagination-btn disabled">&laquo;</span>
+                    <span class="pagination-btn disabled">&lsaquo;</span>
+                {% endif %}
+
+                <!-- 페이지 번호 -->
+                {% for i in notice_page.paginator.page_range%}
+                    {% if i == page_obj.number %}
+                        <a href="?page={{ i }}{% if query %}&query={{ query }}{% endif %}" class="pagination-btn current-page">{{ i }}</a>
+                    {% else %}
+                        <a href="?page={{ i }}{% if query %}&query={{ query }}{% endif %}" class="pagination-btn">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- 다음 페이지 버튼 -->
+                {% if notice_page.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if query %}&query={{ query }}{% endif %}" class="pagination-btn">&rsaquo;</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&query={{ query }}{% endif %}" class="pagination-btn">&raquo;</a>
+                {% else %}
+                    <span class="pagination-btn disabled">&rsaquo;</span>
+                    <span class="pagination-btn disabled">&raquo;</span>
+                {% endif %}
+            </div>
+            {% if request.user.is_superuser %}
+            <div id="btn_write" class="text-end mt-3">
+                <a href="{% url 'custom:notice_write' %}" class="btn-a btn btn-primary">공지사항 등록</a>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+{% endblock %}
